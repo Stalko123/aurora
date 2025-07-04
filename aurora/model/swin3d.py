@@ -767,6 +767,7 @@ class Swin3DTransformerBackbone(nn.Module):
         lora_mode: LoRAMode = "single",
         use_lora: bool = False,
     ) -> None:
+
         """
         Args:
             embed_dim (int): Patch embedding dimension. Default to `96`.
@@ -792,6 +793,7 @@ class Swin3DTransformerBackbone(nn.Module):
                 and `"all"` uses a different LoRA for every roll-out step. Defaults to `"single"`.
             use_lora (bool, optional): Enable LoRA. By default, LoRA is disabled.
         """
+        
         super().__init__()
 
         self.window_size = to_3tuple(window_size)
@@ -887,6 +889,7 @@ class Swin3DTransformerBackbone(nn.Module):
         rollout_step: int,
         patch_res: tuple[int, int, int],
     ) -> torch.Tensor:
+        import pdb; pdb.set_trace()  # noqa: T201  
         """Run the backbone.
 
         Args:

@@ -128,7 +128,7 @@ def get_static_vars_era5(path): #This function is not used in the current implem
 
     # Extract static variables
 
-    return (torch.from_numpy(ds[aurora_to_era5['lsm']].values)[0], torch.from_numpy(ds[aurora_to_era5['slt']].values)[0],torch.from_numpy(ds[aurora_to_era5['z']].values)[0],torch.from_numpy(ds['land_sea_mask'].values)[0],torch.from_numpy(ds['model_bathymetry'].values)[0])  # Assuming 'land_sea_mask' is the static variable of interest
+    return torch.from_numpy(ds[aurora_to_era5['lsm']].values)[0]  # Assuming 'land_sea_mask' is the static variable of interest
 
     
 def get_batch_era5(path, year, month, day, hour_start): #Works good gives a dataset with two convecutive timesteps corresponding to the requested variable.
@@ -154,7 +154,7 @@ def get_batch_era5(path, year, month, day, hour_start): #Works good gives a data
         atm_vars[key] = torch.from_numpy(atm_vars_ds.values[:2][None])
         
 
-    lsm,slt,z,lat_mask,wmb = get_static_vars_era5(path)  # Get static variables if needed
+    lsm = get_static_vars_era5(path)  # Get static variables if needed
     
     batch = Batch(
         surf_vars=surface_vars,
@@ -163,10 +163,7 @@ def get_batch_era5(path, year, month, day, hour_start): #Works good gives a data
         static_vars= {
            
             'lsm': lsm   # Land-sea mask
-            ,'slt': slt   # Soil type
-            ,'z': z       # Geopotential at surface
-            ,'lat_mask': lat_mask  # Latitude mask
-            ,'wmb': wmb   # Wave mask or other static variable if needed
+            
         }
     )
 
@@ -185,16 +182,16 @@ if __name__ == "__main__":
     month = 1
     day = 1
     hour = 0
-    var_name = '2t'  # Example variable name
 
     with open("saved_batch.pkl", "wb") as f:
         batch= get_batch_era5(path, year, month, day, hour)
 
     model = AuroraWave(surf_vars=tuple(list(aurora_to_era5_surf.keys())),  # Surface variables
-        angle_surf_vars= ['mwd', 'mdww','mdts', 'mwd1', 'mwd2'],  # Angle surface variables
+        angle_surf_vars= ['mwd'],  # Angle surface variables
     )
     print("Model created successfully.")
-    
+    model.load_checkpoint(strict=False)
+    print("Checkpoint loaded successfully.")
     model.eval()
     print("Feeding the batch to the model...")
     '''import pdb

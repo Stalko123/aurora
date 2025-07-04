@@ -262,6 +262,8 @@ class Aurora(torch.nn.Module):
             self.backbone.to(torch.bfloat16)
 
     def forward(self, batch: Batch) -> Batch:
+            
+        print("forward called successfully")
         """Forward pass.
 
         Args:
@@ -270,6 +272,10 @@ class Aurora(torch.nn.Module):
         Returns:
             :class:`Batch`: Prediction for the batch.
         """
+        '''import pdb
+        pdb.set_trace()  # noqa: T201'''
+        import pdb
+        pdb.set_trace()  # noqa: T201
         batch = self.batch_transform_hook(batch)
 
         # Get the first parameter. We'll derive the data type and device from this parameter.
@@ -306,6 +312,7 @@ class Aurora(torch.nn.Module):
                     for k, v in batch.surf_vars.items()
                 },
             )
+
         if self.positive_atmos_vars:
             transformed_batch = dataclasses.replace(
                 transformed_batch,
@@ -315,23 +322,25 @@ class Aurora(torch.nn.Module):
                 },
             )
 
-        transformed_batch = self._pre_encoder_hook(transformed_batch)
 
+        
+        transformed_batch = self._pre_encoder_hook(transformed_batch)
+        
         # The encoder is always just run.
         x = self.encoder(
             transformed_batch,
             lead_time=self.timestep,
         )
-
+        
         # In BF16 mode, the backbone is run in pure BF16.
         if self.bf16_mode:
             x = x.to(torch.bfloat16)
-        x = self.backbone(
+        '''x = self.backbone(
             x,
             lead_time=self.timestep,
             patch_res=patch_res,
             rollout_step=batch.metadata.rollout_step,
-        )
+        )'''
 
         # In BF16 mode, the decoder is run in AMP PF16, and the output is converted back to FP32.
         # We run in PF16 as opposed to BF16 for improved relative precision.
@@ -855,12 +864,12 @@ class AuroraWave(Aurora):
                 mask = batch.surf_vars[name_sh] < 1e-4
                 if mask.sum() > 0:
                     for name in (name_sh,) + other_wave_components:
-                        x = batch.surf_vars[name].clone()  # Clone to safely mutate.
-                        x[mask] = np.nan
-                        batch.surf_vars[name] = x
-                        # There should be no small values left, except for in wave directions.
-                        if name not in {"mwd", "mdww", "mdts", "mwd1", "mwd2"}:
-                            assert (batch.surf_vars[name] < 1e-4).sum() == 0
+                            x = batch.surf_vars[name].clone()  # Clone to safely mutate.
+                            x[mask] = np.nan
+                            batch.surf_vars[name] = x
+                            # There should be no small values left, except for in wave directions.
+                            if name not in {"mwd", "mdww", "mdts", "mwd1", "mwd2"}:
+                                assert (batch.surf_vars[name] < 1e-4).sum() == 0
 
         return batch
 
